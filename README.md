@@ -13,9 +13,9 @@ A comprehensive project management application built with ASP.NET Core 8.0 and E
 - **Tags**: Task categorization with color-coded labels
 
 ## Technology Stack
-- **Backend**: ASP.NET Core 8.0 Web API
-- **Database**: SQL Server / LocalDB
-- **ORM**: Entity Framework Core 8.0
+- **Backend**: ASP.NET Core 9.0 Web API
+- **Database**: SQLite
+- **ORM**: Entity Framework Core 9.0
 - **Documentation**: Swagger/OpenAPI
 
 ## Database Schema
