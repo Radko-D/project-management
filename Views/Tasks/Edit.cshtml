@@ -1,0 +1,388 @@
+@{
+    ViewData["Title"] = "Edit Task";
+    var taskId = ViewBag.TaskId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Task</h1>
+            <a href="/Tasks" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tasks
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Task Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editTaskForm">
+                    <input type="hidden" id="taskId" value="@taskId">
+                    
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Task Title *</label>
+                        <input type="text" class="form-control" id="taskTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="taskStatus" class="form-label">Status</label>
+                            <select class="form-select" id="taskStatus">
+                                <option value="ToDo">To Do</option>
+                                <option value="InProgress">In Progress</option>
+                                <option value="InReview">In Review</option>
+                                <option value="Done">Done</option>
+                                <option value="Blocked">Blocked</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="taskDueDate" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="taskDueDate">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="taskMilestone" class="form-label">Milestone</label>
+                            <select class="form-select" id="taskMilestone">
+                                <option value="">No Milestone</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label for="taskEstimatedHours" class="form-label">Estimated Hours</label>
+                            <input type="number" class="form-control" id="taskEstimatedHours" min="0" step="0.5">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="taskActualHours" class="form-label">Actual Hours</label>
+                            <input type="number" class="form-control" id="taskActualHours" min="0" step="0.5">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Task
+                        </button>
+                        <a href="/Tasks/Details/@taskId" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Member Assignment Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-users"></i> Team Member Assignments</h5>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignMemberModal">
+                    <i class="fas fa-user-plus"></i> Assign Member
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="currentAssignments">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tags"></i> Tags</h5>
+            </div>
+            <div class="card-body" id="taskTags">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Member Modal -->
+<div class="modal fade" id="assignMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Team Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="assignMemberForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="memberSelect" class="form-label">Select Team Member</label>
+                        <select class="form-select" id="memberSelect" required>
+                            <option value="">Choose a team member...</option>
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        Team members from all teams are available for assignment.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const taskId = @taskId;
+        let task = null;
+        let milestones = [];
+        let availableMembers = [];
+
+        $(document).ready(function() {
+            loadTask();
+            loadMilestones();
+            loadAvailableMembers();
+            
+            $('#editTaskForm').on('submit', handleSubmit);
+            $('#assignMemberForm').on('submit', handleAssignMember);
+        });
+
+        function loadTask() {
+            api.get(`/tasks/${taskId}`)
+                .then(data => {
+                    task = data;
+                    populateForm();
+                    displayCurrentInfo();
+                    displayTags();
+                    displayCurrentAssignments();
+                    populateMemberDropdown();
+                })
+                .catch(error => {
+                    console.error('Error loading task:', error);
+                    showAlert('Error loading task data', 'danger');
+                });
+        }
+
+        function loadMilestones() {
+            api.get('/milestones')
+                .then(data => {
+                    milestones = data;
+                    populateMilestoneDropdown();
+                });
+        }
+
+        function loadAvailableMembers() {
+            api.get('/teams')
+                .then(data => {
+                    availableMembers = [];
+                    data.forEach(team => {
+                        if (team.teamMembers) {
+                            team.teamMembers.forEach(member => {
+                                member.teamName = team.name;
+                                availableMembers.push(member);
+                            });
+                        }
+                    });
+                    populateMemberDropdown();
+                });
+        }
+
+        function populateForm() {
+            $('#taskTitle').val(task.title);
+            $('#taskDescription').val(task.description);
+            $('#taskPriority').val(task.priority);
+            $('#taskStatus').val(task.status);
+            $('#taskDueDate').val(task.dueDate ? task.dueDate.split('T')[0] : '');
+            $('#taskEstimatedHours').val(task.estimatedHours || '');
+            $('#taskActualHours').val(task.actualHours || '');
+            $('#taskMilestone').val(task.milestoneId || '');
+        }
+
+        function populateMilestoneDropdown() {
+            const select = $('#taskMilestone');
+            select.empty().append('<option value="">No Milestone</option>');
+            
+            const projectId = task?.board?.project?.id;
+            const filteredMilestones = projectId ? 
+                milestones.filter(m => m.projectId === projectId) : 
+                milestones;
+            
+            filteredMilestones.forEach(milestone => {
+                select.append(`<option value="${milestone.id}">${milestone.name}</option>`);
+            });
+            
+            if (task?.milestoneId) {
+                select.val(task.milestoneId);
+            }
+        }
+
+        function populateMemberDropdown() {
+            if (!availableMembers.length || !task) return;
+            
+            const select = $('#memberSelect');
+            select.empty().append('<option value="">Choose a team member...</option>');
+            
+            // Filter out already assigned members
+            const assignedMemberIds = task.assignments?.map(a => a.teamMemberId) || [];
+            const unassignedMembers = availableMembers.filter(member => !assignedMemberIds.includes(member.id));
+            
+            unassignedMembers.forEach(member => {
+                select.append(`<option value="${member.id}">${member.name} (${member.role} - ${member.teamName})</option>`);
+            });
+        }
+
+        function displayCurrentInfo() {
+            const html = `
+                <div class="mb-2">
+                    <strong>Board:</strong><br>
+                    <span class="badge bg-info">${task.board?.name || 'Unknown'}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Project:</strong><br>
+                    <span class="badge bg-primary">${task.board?.project?.name || 'Unknown'}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(task.createdAt)}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Last Updated:</strong><br>
+                    <small>${formatDateTime(task.updatedAt)}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Assignments:</strong>
+                    <span class="badge bg-secondary">${task.assignments ? task.assignments.length : 0}</span>
+                </div>
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function displayTags() {
+            if (!task.taskTags || task.taskTags.length === 0) {
+                $('#taskTags').html('<p class="text-muted">No tags assigned</p>');
+                return;
+            }
+
+            const html = task.taskTags.map(taskTag => 
+                `<span class="badge me-1 mb-1" style="background-color: ${taskTag.tag?.color}; color: ${getContrastColor(taskTag.tag?.color)};">
+                    ${taskTag.tag?.name}
+                </span>`
+            ).join('');
+            
+            $('#taskTags').html(html);
+        }
+
+        function displayCurrentAssignments() {
+            if (!task.assignments || task.assignments.length === 0) {
+                $('#currentAssignments').html('<p class="text-muted">No team members assigned yet</p>');
+                return;
+            }
+
+            const html = task.assignments.map(assignment => `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-3 bg-light rounded">
+                    <div>
+                        <strong>${assignment.teamMember?.name}</strong>
+                        <small class="text-muted d-block">${assignment.teamMember?.role}</small>
+                        <small class="text-muted">Assigned: ${formatDate(assignment.assignedAt)}</small>
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger" onclick="removeAssignment(${assignment.teamMemberId})">
+                        <i class="fas fa-user-minus"></i> Remove
+                    </button>
+                </div>
+            `).join('');
+
+            $('#currentAssignments').html(html);
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            const taskData = {
+                title: $('#taskTitle').val(),
+                description: $('#taskDescription').val(),
+                priority: $('#taskPriority').val(),
+                status: $('#taskStatus').val(),
+                dueDate: $('#taskDueDate').val() || null,
+                estimatedHours: $('#taskEstimatedHours').val() ? parseInt($('#taskEstimatedHours').val()) : null,
+                actualHours: $('#taskActualHours').val() ? parseInt($('#taskActualHours').val()) : null,
+                milestoneId: $('#taskMilestone').val() || null
+            };
+
+            api.put(`/tasks/${taskId}`, taskData)
+                .then(data => {
+                    showAlert('Task updated successfully!', 'success');
+                    loadTask(); // Reload to show updated data
+                })
+                .catch(error => {
+                    console.error('Error updating task:', error);
+                    showAlert('Error updating task', 'danger');
+                });
+        }
+
+        function handleAssignMember(e) {
+            e.preventDefault();
+            
+            const memberId = $('#memberSelect').val();
+            if (!memberId) return;
+
+            api.post(`/tasks/${taskId}/assign/${memberId}`, {})
+                .then(() => {
+                    $('#assignMemberModal').modal('hide');
+                    loadTask(); // Reload to show new assignment
+                    showAlert('Member assigned successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error assigning member:', error);
+                    showAlert('Error assigning member', 'danger');
+                });
+        }
+
+        function removeAssignment(memberId) {
+            if (!confirm('Are you sure you want to remove this assignment?')) return;
+            
+            // Since we don't have a direct remove assignment endpoint,
+            // we'll show a message for now
+            showAlert('Assignment removal would require additional API endpoint', 'info');
+        }
+
+        function getContrastColor(hexColor) {
+            if (!hexColor) return '#000000';
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+    </script>
+}

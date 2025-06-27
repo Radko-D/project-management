@@ -1,0 +1,264 @@
+@{
+    ViewData["Title"] = "Board Details";
+    var boardId = ViewBag.BoardId;
+}
+
+<div id="boardDetailsContainer">
+    <div class="text-center">
+        <i class="fas fa-spinner fa-spin"></i> Loading board details...
+    </div>
+</div>
+
+<!-- Quick Add Task Modal -->
+<div class="modal fade" id="quickAddTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Add Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickAddTaskForm">
+                <div class="modal-body">
+                    <input type="hidden" id="quickTaskBoardId" value="@boardId">
+                    <div class="mb-3">
+                        <label for="quickTaskTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="quickTaskTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quickTaskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="quickTaskDescription" rows="2"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="quickTaskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="quickTaskPriority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="High">High</option>
+                                <option value="Critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="quickTaskDueDate" class="form-label">Due Date</label>
+                            <input type="date" class="form-control" id="quickTaskDueDate">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const boardId = @boardId;
+        let board = null;
+        let tasks = [];
+
+        $(document).ready(function() {
+            loadBoardDetails();
+            $('#quickAddTaskForm').on('submit', handleQuickAddTask);
+        });
+
+        function loadBoardDetails() {
+            Promise.all([
+                api.get(`/boards/${boardId}`),
+                api.get(`/tasks/board/${boardId}`)
+            ])
+            .then(([boardData, tasksData]) => {
+                board = boardData;
+                tasks = tasksData;
+                displayBoardDetails();
+            })
+            .catch(error => {
+                console.error('Error loading board:', error);
+                $('#boardDetailsContainer').html('<div class="alert alert-danger">Error loading board details</div>');
+            });
+        }
+
+        function displayBoardDetails() {
+            const tasksByStatus = {
+                'ToDo': tasks.filter(t => t.status === 'ToDo'),
+                'InProgress': tasks.filter(t => t.status === 'InProgress'),
+                'InReview': tasks.filter(t => t.status === 'InReview'),
+                'Done': tasks.filter(t => t.status === 'Done'),
+                'Blocked': tasks.filter(t => t.status === 'Blocked')
+            };
+
+            const html = `
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1><i class="fas fa-columns"></i> ${board.name}</h1>
+                                <p class="text-muted">${board.description || 'No description'}</p>
+                                <small class="text-muted">Project: ${board.project?.name || 'Unknown'}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#quickAddTaskModal">
+                                    <i class="fas fa-plus"></i> Quick Add Task
+                                </button>
+                                <a href="/Boards" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Boards
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kanban-board">
+                    <div class="row">
+                        ${Object.entries(tasksByStatus).map(([status, statusTasks]) => `
+                            <div class="col-md kanban-column">
+                                <div class="card h-100">
+                                    <div class="card-header bg-${getStatusColorVariant(status)} text-white">
+                                        <h6 class="mb-0">
+                                            ${status.replace(/([A-Z])/g, ' $1').trim()}
+                                            <span class="badge badge-light ms-2">${statusTasks.length}</span>
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-2 kanban-tasks" data-status="${status}" style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                                        ${statusTasks.map(task => createTaskCard(task)).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            $('#boardDetailsContainer').html(html);
+            initializeDragAndDrop();
+        }
+
+        function createTaskCard(task) {
+            const priorityClass = getPriorityClass(task.priority);
+            const assignee = task.assignments && task.assignments.length > 0 ? 
+                task.assignments[0].teamMember?.name : 'Unassigned';
+            const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'Done';
+
+            return `
+                <div class="task-card card mb-2 ${isOverdue ? 'border-danger' : ''}" data-task-id="${task.id}" draggable="true">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="card-title mb-0">${task.title}</h6>
+                            <span class="badge ${priorityClass}">${task.priority}</span>
+                        </div>
+                        ${task.description ? `<p class="card-text small text-muted">${task.description.substring(0, 80)}${task.description.length > 80 ? '...' : ''}</p>` : ''}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-user"></i> ${assignee}
+                            </small>
+                            ${task.dueDate ? `<small class="text-muted ${isOverdue ? 'text-danger' : ''}">
+                                <i class="fas fa-calendar"></i> ${formatDate(task.dueDate)}
+                            </small>` : ''}
+                        </div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewTask(${task.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${task.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getStatusColorVariant(status) {
+            switch(status) {
+                case 'ToDo': return 'secondary';
+                case 'InProgress': return 'primary';
+                case 'InReview': return 'info';
+                case 'Done': return 'success';
+                case 'Blocked': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function initializeDragAndDrop() {
+            $('.task-card').on('dragstart', function(e) {
+                e.originalEvent.dataTransfer.setData('text/plain', $(this).data('task-id'));
+                $(this).addClass('dragging');
+            });
+
+            $('.task-card').on('dragend', function(e) {
+                $(this).removeClass('dragging');
+            });
+
+            $('.kanban-tasks').on('dragover', function(e) {
+                e.preventDefault();
+                $(this).addClass('drag-over');
+            });
+
+            $('.kanban-tasks').on('dragleave', function(e) {
+                $(this).removeClass('drag-over');
+            });
+
+            $('.kanban-tasks').on('drop', function(e) {
+                e.preventDefault();
+                $(this).removeClass('drag-over');
+                
+                const taskId = e.originalEvent.dataTransfer.getData('text/plain');
+                const newStatus = $(this).data('status');
+                
+                updateTaskStatus(taskId, newStatus);
+            });
+        }
+
+        function updateTaskStatus(taskId, newStatus) {
+            const task = tasks.find(t => t.id == taskId);
+            if (!task) return;
+
+            const updatedTask = { ...task, status: newStatus };
+
+            api.put(`/tasks/${taskId}`, updatedTask)
+                .then(() => {
+                    loadBoardDetails(); // Refresh the board
+                    showAlert(`Task moved to ${newStatus.replace(/([A-Z])/g, ' $1').trim()}`, 'success');
+                })
+                .catch(error => {
+                    console.error('Error updating task:', error);
+                    showAlert('Error updating task status', 'danger');
+                });
+        }
+
+        function handleQuickAddTask(e) {
+            e.preventDefault();
+            
+            const taskData = {
+                title: $('#quickTaskTitle').val(),
+                description: $('#quickTaskDescription').val(),
+                priority: $('#quickTaskPriority').val(),
+                dueDate: $('#quickTaskDueDate').val() || null,
+                boardId: parseInt(boardId),
+                status: 'ToDo'
+            };
+
+            api.post('/tasks', taskData)
+                .then(data => {
+                    $('#quickAddTaskModal').modal('hide');
+                    $('#quickAddTaskForm')[0].reset();
+                    loadBoardDetails();
+                    showAlert('Task added successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error creating task:', error);
+                    showAlert('Error creating task', 'danger');
+                });
+        }
+
+        function viewTask(id) {
+            window.location.href = `/Tasks/Details/${id}`;
+        }
+
+        function editTask(id) {
+            window.location.href = `/Tasks/Edit/${id}`;
+        }
+    </script>
+}

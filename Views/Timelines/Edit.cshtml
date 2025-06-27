@@ -1,0 +1,278 @@
+@{
+    ViewData["Title"] = "Edit Timeline";
+    var timelineId = ViewBag.TimelineId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Timeline</h1>
+            <a href="/Timelines" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Timelines
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Timeline Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editTimelineForm">
+                    <input type="hidden" id="timelineId" value="@timelineId">
+                    
+                    <div class="mb-3">
+                        <label for="timelineName" class="form-label">Timeline Name *</label>
+                        <input type="text" class="form-control" id="timelineName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="timelineDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="timelineDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="timelineStartDate" class="form-label">Start Date *</label>
+                            <input type="date" class="form-control" id="timelineStartDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="timelineEndDate" class="form-label">End Date *</label>
+                            <input type="date" class="form-control" id="timelineEndDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Timeline
+                        </button>
+                        <a href="/Timelines" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-calendar-alt"></i> Timeline Events</h5>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                    <i class="fas fa-plus"></i> Add Event
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="timelineEvents">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Timeline Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addEventForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="eventTitle" class="form-label">Event Title *</label>
+                        <input type="text" class="form-control" id="eventTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="eventDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="eventDate" class="form-label">Event Date *</label>
+                        <input type="date" class="form-control" id="eventDate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const timelineId = @timelineId;
+        let timeline = null;
+
+        $(document).ready(function() {
+            loadTimeline();
+            $('#editTimelineForm').on('submit', handleTimelineSubmit);
+            $('#addEventForm').on('submit', handleAddEvent);
+        });
+
+        function loadTimeline() {
+            api.get(`/timelines/${timelineId}`)
+                .then(data => {
+                    timeline = data;
+                    populateForm();
+                    displayCurrentInfo();
+                    displayEvents();
+                    updateEventDateLimits();
+                })
+                .catch(error => {
+                    console.error('Error loading timeline:', error);
+                    showAlert('Error loading timeline data', 'danger');
+                });
+        }
+
+        function populateForm() {
+            $('#timelineName').val(timeline.name);
+            $('#timelineDescription').val(timeline.description);
+            $('#timelineStartDate').val(timeline.startDate.split('T')[0]);
+            $('#timelineEndDate').val(timeline.endDate.split('T')[0]);
+        }
+
+        function displayCurrentInfo() {
+            const duration = Math.ceil((new Date(timeline.endDate) - new Date(timeline.startDate)) / (1000 * 60 * 60 * 24));
+            const eventCount = timeline.events ? timeline.events.length : 0;
+            const isActive = new Date() >= new Date(timeline.startDate) && new Date() <= new Date(timeline.endDate);
+            
+            const html = `
+                <div class="mb-2">
+                    <strong>Project:</strong><br>
+                    <span class="badge bg-primary">${timeline.project?.name || 'Unknown'}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Status:</strong>
+                    <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                        ${isActive ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <strong>Duration:</strong><br>
+                    <span class="badge bg-info">${duration} days</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Total Events:</strong>
+                    <span class="badge bg-warning">${eventCount}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(timeline.createdAt)}</small>
+                </div>
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function displayEvents() {
+            if (!timeline.events || timeline.events.length === 0) {
+                $('#timelineEvents').html('<p class="text-muted">No events added yet</p>');
+                return;
+            }
+
+            const sortedEvents = timeline.events.sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+            
+            const html = `
+                <div class="timeline">
+                    ${sortedEvents.map(event => `
+                        <div class="timeline-item">
+                            <h6>${event.title}</h6>
+                            <p class="text-muted mb-1">${event.description || 'No description'}</p>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> ${formatDate(event.eventDate)}
+                            </small>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            $('#timelineEvents').html(html);
+        }
+
+        function updateEventDateLimits() {
+            if (timeline) {
+                $('#eventDate').attr('min', timeline.startDate.split('T')[0]);
+                $('#eventDate').attr('max', timeline.endDate.split('T')[0]);
+            }
+        }
+
+        function handleTimelineSubmit(e) {
+            e.preventDefault();
+            
+            const timelineData = {
+                name: $('#timelineName').val(),
+                description: $('#timelineDescription').val(),
+                startDate: $('#timelineStartDate').val(),
+                endDate: $('#timelineEndDate').val()
+            };
+
+            // Validate dates
+            if (new Date(timelineData.endDate) <= new Date(timelineData.startDate)) {
+                showAlert('End date must be after start date', 'danger');
+                return;
+            }
+
+            api.put(`/timelines/${timelineId}`, timelineData)
+                .then(data => {
+                    showAlert('Timeline updated successfully!', 'success');
+                    loadTimeline(); // Reload to show updated data
+                })
+                .catch(error => {
+                    console.error('Error updating timeline:', error);
+                    showAlert('Error updating timeline', 'danger');
+                });
+        }
+
+        function handleAddEvent(e) {
+            e.preventDefault();
+            
+            const eventData = {
+                title: $('#eventTitle').val(),
+                description: $('#eventDescription').val(),
+                eventDate: $('#eventDate').val()
+            };
+
+            // Validate event date is within timeline bounds
+            const eventDate = new Date(eventData.eventDate);
+            const startDate = new Date(timeline.startDate);
+            const endDate = new Date(timeline.endDate);
+            
+            if (eventDate < startDate || eventDate > endDate) {
+                showAlert('Event date must be within timeline start and end dates', 'danger');
+                return;
+            }
+
+            api.post(`/timelines/${timelineId}/events`, eventData)
+                .then(data => {
+                    $('#addEventModal').modal('hide');
+                    $('#addEventForm')[0].reset();
+                    loadTimeline(); // Reload to show new event
+                    showAlert('Event added successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error adding event:', error);
+                    showAlert('Error adding event', 'danger');
+                });
+        }
+    </script>
+}

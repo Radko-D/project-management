@@ -1,0 +1,180 @@
+@{
+    ViewData["Title"] = "Edit Milestone";
+    var milestoneId = ViewBag.MilestoneId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Milestone</h1>
+            <a href="/Milestones" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Milestones
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Milestone Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editMilestoneForm">
+                    <input type="hidden" id="milestoneId" value="@milestoneId">
+                    
+                    <div class="mb-3">
+                        <label for="milestoneName" class="form-label">Milestone Name *</label>
+                        <input type="text" class="form-control" id="milestoneName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="milestoneDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="milestoneDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="milestoneDueDate" class="form-label">Due Date *</label>
+                            <input type="date" class="form-control" id="milestoneDueDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="milestoneCompleted">
+                                <label class="form-check-label" for="milestoneCompleted">
+                                    Mark as Completed
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Milestone
+                        </button>
+                        <a href="/Milestones" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const milestoneId = @milestoneId;
+        let milestone = null;
+
+        $(document).ready(function() {
+            loadMilestone();
+            $('#editMilestoneForm').on('submit', handleSubmit);
+        });
+
+        function loadMilestone() {
+            api.get(`/milestones/${milestoneId}`)
+                .then(data => {
+                    milestone = data;
+                    populateForm();
+                    displayCurrentInfo();
+                })
+                .catch(error => {
+                    console.error('Error loading milestone:', error);
+                    showAlert('Error loading milestone data', 'danger');
+                });
+        }
+
+        function populateForm() {
+            $('#milestoneName').val(milestone.name);
+            $('#milestoneDescription').val(milestone.description);
+            $('#milestoneDueDate').val(milestone.dueDate.split('T')[0]);
+            $('#milestoneCompleted').prop('checked', milestone.isCompleted);
+        }
+
+        function displayCurrentInfo() {
+            const isOverdue = !milestone.isCompleted && new Date(milestone.dueDate) < new Date();
+            const taskCount = milestone.tasks ? milestone.tasks.length : 0;
+            const completedTasks = milestone.tasks ? milestone.tasks.filter(t => t.status === 'Done').length : 0;
+            
+            const html = `
+                <div class="mb-2">
+                    <strong>Current Status:</strong>
+                    <span class="badge ${milestone.isCompleted ? 'bg-success' : (isOverdue ? 'bg-danger' : 'bg-warning')}">
+                        ${milestone.isCompleted ? 'Completed' : (isOverdue ? 'Overdue' : 'In Progress')}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <strong>Project:</strong><br>
+                    <span class="badge bg-primary">${milestone.project?.name || 'Unknown'}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(milestone.createdAt)}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Total Tasks:</strong>
+                    <span class="badge bg-info">${taskCount}</span>
+                </div>
+                ${taskCount > 0 ? `
+                    <div class="mb-2">
+                        <strong>Completed Tasks:</strong>
+                        <span class="badge bg-success">${completedTasks}</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong>Progress:</strong>
+                        <div class="progress mt-1">
+                            <div class="progress-bar" style="width: ${Math.round((completedTasks / taskCount) * 100)}%">
+                                ${Math.round((completedTasks / taskCount) * 100)}%
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+                ${isOverdue ? `
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        This milestone is overdue!
+                    </div>
+                ` : ''}
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            const milestoneData = {
+                name: $('#milestoneName').val(),
+                description: $('#milestoneDescription').val(),
+                dueDate: $('#milestoneDueDate').val(),
+                isCompleted: $('#milestoneCompleted').is(':checked')
+            };
+
+            api.put(`/milestones/${milestoneId}`, milestoneData)
+                .then(data => {
+                    showAlert('Milestone updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Milestones';
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error('Error updating milestone:', error);
+                    showAlert('Error updating milestone', 'danger');
+                });
+        }
+    </script>
+}

@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "Edit Board";
+    var boardId = ViewBag.BoardId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Board</h1>
+            <a href="/Boards" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Boards
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Board Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editBoardForm">
+                    <input type="hidden" id="boardId" value="@boardId">
+                    
+                    <div class="mb-3">
+                        <label for="boardName" class="form-label">Board Name *</label>
+                        <input type="text" class="form-control" id="boardName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="boardDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="boardDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Board
+                        </button>
+                        <a href="/Boards/Details/@boardId" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <a href="/Boards/Details/@boardId" class="btn btn-info ms-2">
+                            <i class="fas fa-columns"></i> View Kanban
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const boardId = @boardId;
+        let board = null;
+
+        $(document).ready(function() {
+            loadBoard();
+            $('#editBoardForm').on('submit', handleSubmit);
+        });
+
+        function loadBoard() {
+            api.get(`/boards/${boardId}`)
+                .then(data => {
+                    board = data;
+                    populateForm();
+                    displayCurrentInfo();
+                })
+                .catch(error => {
+                    console.error('Error loading board:', error);
+                    showAlert('Error loading board data', 'danger');
+                });
+        }
+
+        function populateForm() {
+            $('#boardName').val(board.name);
+            $('#boardDescription').val(board.description);
+        }
+
+        function displayCurrentInfo() {
+            const taskCount = board.tasks ? board.tasks.length : 0;
+            const tasksByStatus = {};
+            
+            if (board.tasks) {
+                board.tasks.forEach(task => {
+                    tasksByStatus[task.status] = (tasksByStatus[task.status] || 0) + 1;
+                });
+            }
+            
+            const html = `
+                <div class="mb-2">
+                    <strong>Project:</strong><br>
+                    <span class="badge bg-primary">${board.project?.name || 'Unknown'}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(board.createdAt)}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Total Tasks:</strong>
+                    <span class="badge bg-info">${taskCount}</span>
+                </div>
+                ${taskCount > 0 ? `
+                    <div class="mt-3">
+                        <strong>Task Breakdown:</strong>
+                        <div class="mt-2">
+                            ${Object.entries(tasksByStatus).map(([status, count]) => 
+                                `<div class="d-flex justify-content-between mb-1">
+                                    <small>${status.replace(/([A-Z])/g, ' $1').trim()}:</small>
+                                    <span class="badge ${getStatusClass(status)}">${count}</span>
+                                </div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            const boardData = {
+                name: $('#boardName').val(),
+                description: $('#boardDescription').val()
+            };
+
+            api.put(`/boards/${boardId}`, boardData)
+                .then(data => {
+                    showAlert('Board updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/Boards/Details/${boardId}`;
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error('Error updating board:', error);
+                    showAlert('Error updating board', 'danger');
+                });
+        }
+    </script>
+}

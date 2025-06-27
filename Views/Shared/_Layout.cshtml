@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Project Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <h3><i class="fas fa-project-diagram"></i> PM System</h3>
+            </div>
+            <ul class="list-unstyled components">
+                <li class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Home")">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Projects" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Projects")">
+                        <i class="fas fa-folder-open"></i> Projects
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Tasks" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Tasks")">
+                        <i class="fas fa-tasks"></i> Tasks
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Teams" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Teams")">
+                        <i class="fas fa-users"></i> Teams
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Boards" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Boards")">
+                        <i class="fas fa-columns"></i> Boards
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Milestones" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Milestones")">
+                        <i class="fas fa-flag"></i> Milestones
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Timelines" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Timelines")">
+                        <i class="fas fa-timeline"></i> Timelines
+                    </a>
+                </li>
+                <li class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Tags" ? "active" : "")">
+                    <a href="@Url.Action("Index", "Tags")">
+                        <i class="fas fa-tags"></i> Tags
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content" class="content">
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid">
+                    <button type="button" id="sidebarCollapse" class="btn btn-info">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    <div class="ml-auto">
+                        <span class="navbar-text">
+                            <i class="fas fa-user"></i> Welcome, Admin
+                        </span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid mt-4">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

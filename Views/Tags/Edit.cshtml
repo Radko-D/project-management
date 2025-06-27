@@ -1,0 +1,206 @@
+@{
+    ViewData["Title"] = "Edit Tag";
+    var tagId = ViewBag.TagId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Tag</h1>
+            <a href="/Tags" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Tags
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Tag Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editTagForm">
+                    <input type="hidden" id="tagId" value="@tagId">
+                    
+                    <div class="mb-3">
+                        <label for="tagName" class="form-label">Tag Name *</label>
+                        <input type="text" class="form-control" id="tagName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tagColor" class="form-label">Color</label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="color" class="form-control form-control-color" id="tagColor">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="tagColorHex" placeholder="#000000">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Preview</label>
+                        <div>
+                            <span id="tagPreview" class="badge fs-6 px-3 py-2">
+                                <i class="fas fa-tag"></i> <span id="previewText">Tag Name</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Tag
+                        </button>
+                        <a href="/Tags" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const tagId = @tagId;
+        let tag = null;
+
+        $(document).ready(function() {
+            loadTag();
+            $('#editTagForm').on('submit', handleSubmit);
+            
+            // Color picker synchronization
+            $('#tagColor').on('input', function() {
+                const color = $(this).val();
+                $('#tagColorHex').val(color);
+                updateTagPreview();
+            });
+            
+            $('#tagColorHex').on('input', function() {
+                const color = $(this).val();
+                $('#tagColor').val(color);
+                updateTagPreview();
+            });
+            
+            $('#tagName').on('input', updateTagPreview);
+        });
+
+        function loadTag() {
+            api.get(`/tags/${tagId}`)
+                .then(data => {
+                    tag = data;
+                    populateForm();
+                    displayCurrentInfo();
+                    updateTagPreview();
+                })
+                .catch(error => {
+                    console.error('Error loading tag:', error);
+                    showAlert('Error loading tag data', 'danger');
+                });
+        }
+
+        function populateForm() {
+            $('#tagName').val(tag.name);
+            $('#tagColor').val(tag.color);
+            $('#tagColorHex').val(tag.color);
+        }
+
+        function displayCurrentInfo() {
+            const taskCount = tag.taskTags ? tag.taskTags.length : 0;
+            
+            const html = `
+                <div class="mb-3 text-center">
+                    <span class="badge fs-6 px-3 py-2" style="background-color: ${tag.color}; color: ${getContrastColor(tag.color)};">
+                        <i class="fas fa-tag"></i> ${tag.name}
+                    </span>
+                </div>
+                <div class="mb-2">
+                    <strong>Current Color:</strong><br>
+                    <code>${tag.color}</code>
+                </div>
+                <div class="mb-2">
+                    <strong>Used in Tasks:</strong>
+                    <span class="badge bg-info">${taskCount}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(tag.createdAt)}</small>
+                </div>
+                ${taskCount > 0 ? `
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        This tag is used in ${taskCount} task${taskCount > 1 ? 's' : ''}. Changes will affect all tagged tasks.
+                    </div>
+                ` : ''}
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function updateTagPreview() {
+            const name = $('#tagName').val() || 'Tag Name';
+            const color = $('#tagColor').val();
+            const textColor = getContrastColor(color);
+            
+            $('#tagPreview').css({
+                'background-color': color,
+                'color': textColor
+            });
+            $('#previewText').text(name);
+        }
+
+        function getContrastColor(hexColor) {
+            if (!hexColor) return '#000000';
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            const tagData = {
+                id: parseInt(tagId),
+                name: $('#tagName').val(),
+                color: $('#tagColor').val()
+            };
+
+            // Validate color format
+            const colorRegex = /^#[0-9A-F]{6}$/i;
+            if (!colorRegex.test(tagData.color)) {
+                showAlert('Please enter a valid hex color (e.g., #FF0000)', 'danger');
+                return;
+            }
+
+            api.put(`/tags/${tagId}`, tagData)
+                .then(data => {
+                    showAlert('Tag updated successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/Tags';
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error('Error updating tag:', error);
+                    showAlert('Error updating tag', 'danger');
+                });
+        }
+    </script>
+}

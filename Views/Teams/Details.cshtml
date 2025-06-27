@@ -1,0 +1,222 @@
+@{
+    ViewData["Title"] = "Team Details";
+    var teamId = ViewBag.TeamId;
+}
+
+<div id="teamDetailsContainer">
+    <div class="text-center">
+        <i class="fas fa-spinner fa-spin"></i> Loading team details...
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const teamId = @teamId;
+        let team = null;
+
+        $(document).ready(function() {
+            loadTeamDetails();
+        });
+
+        function loadTeamDetails() {
+            api.get(`/teams/${teamId}`)
+                .then(data => {
+                    team = data;
+                    displayTeamDetails();
+                })
+                .catch(error => {
+                    console.error('Error loading team:', error);
+                    $('#teamDetailsContainer').html('<div class="alert alert-danger">Error loading team details</div>');
+                });
+        }
+
+        function displayTeamDetails() {
+            const memberCount = team.teamMembers ? team.teamMembers.length : 0;
+            const projectCount = team.projectTeams ? team.projectTeams.length : 0;
+            
+            const html = `
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1><i class="fas fa-users"></i> ${team.name}</h1>
+                                <p class="text-muted">${team.description || 'No description'}</p>
+                                <span class="badge bg-primary">${memberCount} members</span>
+                                <span class="badge bg-info ms-2">${projectCount} projects</span>
+                            </div>
+                            <div>
+                                <button class="btn btn-success me-2" onclick="addMember()">
+                                    <i class="fas fa-user-plus"></i> Add Member
+                                </button>
+                                <button class="btn btn-outline-primary me-2" onclick="editTeam()">
+                                    <i class="fas fa-edit"></i> Edit Team
+                                </button>
+                                <a href="/Teams" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Teams
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-users"></i> Team Members</h5>
+                            </div>
+                            <div class="card-body">
+                                ${team.teamMembers && team.teamMembers.length > 0 ? `
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Role</th>
+                                                    <th>Joined</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${team.teamMembers.map(member => `
+                                                    <tr>
+                                                        <td><strong>${member.name}</strong></td>
+                                                        <td>${member.email}</td>
+                                                        <td>
+                                                            <span class="badge bg-secondary">${member.role}</span>
+                                                        </td>
+                                                        <td>${formatDate(member.joinedAt)}</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-outline-danger" onclick="removeMember(${member.id})">
+                                                                <i class="fas fa-trash"></i> Remove
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ` : '<p class="text-muted">No team members yet</p>'}
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-project-diagram"></i> Assigned Projects</h5>
+                            </div>
+                            <div class="card-body">
+                                ${team.projectTeams && team.projectTeams.length > 0 ? 
+                                    team.projectTeams.map(pt => `
+                                        <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                                            <div>
+                                                <h6 class="mb-1">${pt.project?.name || 'Unknown Project'}</h6>
+                                                <p class="text-muted mb-1">${pt.project?.description || 'No description'}</p>
+                                                <small class="text-muted">
+                                                    Status: <span class="badge ${getStatusClass(pt.project?.status)}">${pt.project?.status}</span>
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted d-block">Assigned: ${formatDate(pt.assignedAt)}</small>
+                                                <a href="/Projects/Details/${pt.project?.id}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> View
+                                                </a>
+                                            </div>
+                                        </div>
+                                    `).join('') : 
+                                    '<p class="text-muted">No projects assigned</p>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5><i class="fas fa-info-circle"></i> Team Information</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Created:</strong></p>
+                                <p>${formatDateTime(team.createdAt)}</p>
+                                
+                                <p><strong>Total Members:</strong></p>
+                                <p>${memberCount}</p>
+                                
+                                <p><strong>Active Projects:</strong></p>
+                                <p>${projectCount}</p>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-chart-pie"></i> Statistics</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-6">
+                                        <h4 class="text-primary">${memberCount}</h4>
+                                        <small>Members</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <h4 class="text-success">${projectCount}</h4>
+                                        <small>Projects</small>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="text-center">
+                                    <h6>Roles Distribution</h6>
+                                    ${getRoleDistribution()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('#teamDetailsContainer').html(html);
+        }
+
+        function getRoleDistribution() {
+            if (!team.teamMembers || team.teamMembers.length === 0) {
+                return '<p class="text-muted">No members</p>';
+            }
+
+            const roles = {};
+            team.teamMembers.forEach(member => {
+                roles[member.role] = (roles[member.role] || 0) + 1;
+            });
+
+            return Object.entries(roles).map(([role, count]) => 
+                `<div class="d-flex justify-content-between mb-1">
+                    <span>${role}</span>
+                    <span class="badge bg-secondary">${count}</span>
+                </div>`
+            ).join('');
+        }
+
+        function addMember() {
+            // This would open the add member modal
+            window.location.href = `/Teams/Edit/${teamId}#addMember`;
+        }
+
+        function editTeam() {
+            window.location.href = `/Teams/Edit/${teamId}`;
+        }
+
+        function removeMember(memberId) {
+            if (!confirm('Are you sure you want to remove this team member?')) return;
+
+            api.delete(`/teams/members/${memberId}`)
+                .then(success => {
+                    if (success) {
+                        loadTeamDetails();
+                        showAlert('Member removed successfully!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing member:', error);
+                    showAlert('Error removing member', 'danger');
+                });
+        }
+    </script>
+}

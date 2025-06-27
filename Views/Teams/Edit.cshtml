@@ -1,0 +1,273 @@
+@{
+    ViewData["Title"] = "Edit Team";
+    var teamId = ViewBag.TeamId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-edit"></i> Edit Team</h1>
+            <a href="/Teams" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Teams
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5><i class="fas fa-edit"></i> Team Information</h5>
+            </div>
+            <div class="card-body">
+                <form id="editTeamForm">
+                    <input type="hidden" id="teamId" value="@teamId">
+                    
+                    <div class="mb-3">
+                        <label for="teamName" class="form-label">Team Name *</label>
+                        <input type="text" class="form-control" id="teamName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="teamDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="teamDescription" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Team
+                        </button>
+                        <a href="/Teams/Details/@teamId" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5><i class="fas fa-users"></i> Team Members</h5>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addMemberModal">
+                    <i class="fas fa-user-plus"></i> Add Member
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="teamMembers">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Current Information</h5>
+            </div>
+            <div class="card-body" id="currentInfo">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Member Modal -->
+<div class="modal fade" id="addMemberModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Team Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addMemberForm">
+                <div class="modal-body">
+                    <input type="hidden" id="memberTeamId" value="@teamId">
+                    <div class="mb-3">
+                        <label for="memberName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="memberName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="memberEmail" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="memberEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="memberRole" class="form-label">Role *</label>
+                        <input type="text" class="form-control" id="memberRole" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const teamId = @teamId;
+        let team = null;
+
+        $(document).ready(function() {
+            loadTeam();
+            $('#editTeamForm').on('submit', handleTeamSubmit);
+            $('#addMemberForm').on('submit', handleAddMember);
+        });
+
+        function loadTeam() {
+            api.get(`/teams/${teamId}`)
+                .then(data => {
+                    team = data;
+                    populateForm();
+                    displayCurrentInfo();
+                    displayMembers();
+                })
+                .catch(error => {
+                    console.error('Error loading team:', error);
+                    showAlert('Error loading team data', 'danger');
+                });
+        }
+
+        function populateForm() {
+            $('#teamName').val(team.name);
+            $('#teamDescription').val(team.description);
+        }
+
+        function displayCurrentInfo() {
+            const memberCount = team.teamMembers ? team.teamMembers.length : 0;
+            const projectCount = team.projectTeams ? team.projectTeams.length : 0;
+            
+            const html = `
+                <div class="mb-2">
+                    <strong>Created:</strong><br>
+                    <small>${formatDateTime(team.createdAt)}</small>
+                </div>
+                <div class="mb-2">
+                    <strong>Total Members:</strong>
+                    <span class="badge bg-primary">${memberCount}</span>
+                </div>
+                <div class="mb-2">
+                    <strong>Active Projects:</strong>
+                    <span class="badge bg-success">${projectCount}</span>
+                </div>
+                ${team.projectTeams && team.projectTeams.length > 0 ? `
+                    <div class="mt-3">
+                        <strong>Assigned Projects:</strong>
+                        ${team.projectTeams.map(pt => 
+                            `<div class="mt-1">
+                                <span class="badge bg-info">${pt.project?.name || 'Unknown'}</span>
+                            </div>`
+                        ).join('')}
+                    </div>
+                ` : ''}
+            `;
+            $('#currentInfo').html(html);
+        }
+
+        function displayMembers() {
+            if (!team.teamMembers || team.teamMembers.length === 0) {
+                $('#teamMembers').html('<p class="text-muted">No team members yet</p>');
+                return;
+            }
+
+            const html = `
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${team.teamMembers.map(member => `
+                                <tr>
+                                    <td><strong>${member.name}</strong></td>
+                                    <td>${member.email}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">${member.role}</span>
+                                    </td>
+                                    <td>${formatDate(member.joinedAt)}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="removeMember(${member.id})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            $('#teamMembers').html(html);
+        }
+
+        function handleTeamSubmit(e) {
+            e.preventDefault();
+            
+            const teamData = {
+                name: $('#teamName').val(),
+                description: $('#teamDescription').val()
+            };
+
+            api.put(`/teams/${teamId}`, teamData)
+                .then(data => {
+                    showAlert('Team updated successfully!', 'success');
+                    loadTeam(); // Reload to show updated data
+                })
+                .catch(error => {
+                    console.error('Error updating team:', error);
+                    showAlert('Error updating team', 'danger');
+                });
+        }
+
+        function handleAddMember(e) {
+            e.preventDefault();
+            
+            const memberData = {
+                name: $('#memberName').val(),
+                email: $('#memberEmail').val(),
+                role: $('#memberRole').val(),
+                teamId: parseInt(teamId)
+            };
+
+            api.post('/teams/members', memberData)
+                .then(data => {
+                    $('#addMemberModal').modal('hide');
+                    $('#addMemberForm')[0].reset();
+                    loadTeam(); // Reload to show new member
+                    showAlert('Member added successfully!', 'success');
+                })
+                .catch(error => {
+                    console.error('Error adding member:', error);
+                    showAlert('Error adding member', 'danger');
+                });
+        }
+
+        function removeMember(memberId) {
+            if (!confirm('Are you sure you want to remove this team member?')) return;
+
+            api.delete(`/teams/members/${memberId}`)
+                .then(success => {
+                    if (success) {
+                        loadTeam(); // Reload to update member list
+                        showAlert('Member removed successfully!', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing member:', error);
+                    showAlert('Error removing member', 'danger');
+                });
+        }
+    </script>
+}

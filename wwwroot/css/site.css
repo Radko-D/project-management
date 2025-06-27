@@ -1,0 +1,494 @@
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --sidebar-width: 250px;
+}
+
+html, body {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    align-items: stretch;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    background: #343a40;
+    color: #fff;
+    transition: all 0.3s;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+.sidebar.active {
+    margin-left: calc(-1 * var(--sidebar-width));
+}
+
+.sidebar-header {
+    padding: 20px;
+    background: #495057;
+    border-bottom: 1px solid #495057;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.sidebar ul.components {
+    padding: 20px 0;
+}
+
+.sidebar ul li {
+    border-bottom: 1px solid #495057;
+}
+
+.sidebar ul li a {
+    padding: 15px 20px;
+    font-size: 1rem;
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar ul li a:hover {
+    color: #007bff;
+    background: #495057;
+}
+
+.sidebar ul li.active > a {
+    color: #fff;
+    background: #007bff;
+}
+
+.sidebar ul li a i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+/* Content Styles */
+.content {
+    width: 100%;
+    padding: 0;
+    min-height: 100vh;
+    transition: all 0.3s;
+    background: #f8f9fa;
+}
+
+.content.active {
+    width: 100%;
+}
+
+#sidebarCollapse {
+    background: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+#sidebarCollapse:hover {
+    background: #0056b3;
+}
+
+/* Card Enhancements */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    border: none;
+}
+
+/* Form Enhancements */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button Enhancements */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    border: none;
+}
+
+.modal-footer {
+    border: none;
+    padding: 20px;
+}
+
+/* Progress Bar */
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 4px;
+    background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+    font-size: 0.7rem;
+    line-height: 8px;
+}
+
+/* List Group */
+.list-group-item {
+    border: none;
+    border-radius: 8px !important;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Kanban Board Styles */
+.kanban-board {
+    overflow-x: auto;
+    padding-bottom: 20px;
+}
+
+.kanban-board .row {
+    flex-wrap: nowrap;
+    min-width: 1200px;
+}
+
+.kanban-board .col-md {
+    min-width: 250px;
+    flex: 1;
+}
+
+.kanban-column {
+    margin-bottom: 20px;
+}
+
+.task-card {
+    cursor: move;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+}
+
+.task-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.kanban-tasks {
+    min-height: 400px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.kanban-tasks.drag-over {
+    background-color: #f8f9fa;
+    border: 2px dashed #007bff;
+}
+
+.badge-light {
+    background-color: rgba(255,255,255,0.2) !important;
+    color: white !important;
+}
+
+.task-card[data-priority="Low"] {
+    border-left-color: #28a745;
+}
+
+.task-card[data-priority="Medium"] {
+    border-left-color: #ffc107;
+}
+
+.task-card[data-priority="High"] {
+    border-left-color: #fd7e14;
+}
+
+.task-card[data-priority="Critical"] {
+    border-left-color: #dc3545;
+}
+
+/* Timeline Styles */
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 20px 0;
+    border-left: 2px solid #007bff;
+    margin-left: 20px;
+    padding-left: 30px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 25px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #007bff;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #007bff;
+}
+
+.timeline-item:last-child {
+    border-left: 2px solid transparent;
+}
+
+/* Enhanced Card Hover Effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Status Indicators */
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.status-indicator.planning {
+    background-color: #6c757d;
+}
+
+.status-indicator.in-progress {
+    background-color: #007bff;
+}
+
+.status-indicator.completed {
+    background-color: #28a745;
+}
+
+.status-indicator.on-hold {
+    background-color: #ffc107;
+}
+
+.status-indicator.cancelled {
+    background-color: #dc3545;
+}
+
+/* Priority Indicators */
+.priority-bar {
+    width: 4px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.priority-bar.low {
+    background: linear-gradient(to bottom, #28a745, #20c997);
+}
+
+.priority-bar.medium {
+    background: linear-gradient(to bottom, #ffc107, #fd7e14);
+}
+
+.priority-bar.high {
+    background: linear-gradient(to bottom, #fd7e14, #dc3545);
+}
+
+.priority-bar.critical {
+    background: linear-gradient(to bottom, #dc3545, #721c24);
+}
+
+/* Enhanced Modals */
+.modal-content {
+    overflow: hidden;
+}
+
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Loading States */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading Spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .kanban-board .row {
+        min-width: auto;
+        flex-wrap: wrap;
+    }
+    
+    .kanban-board .col-md {
+        min-width: 100%;
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 1000;
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+        margin-left: 0;
+    }
+    
+    .content {
+        margin-left: 0;
+    }
+    
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+    }
+    
+    .sidebar-backdrop.show {
+        display: block;
+    }
+    
+    .kanban-board .row {
+        flex-direction: column;
+    }
+    
+    .kanban-column {
+        margin-bottom: 15px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar, .navbar, .btn, .modal {
+        display: none !important;
+    }
+    
+    .content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+}
