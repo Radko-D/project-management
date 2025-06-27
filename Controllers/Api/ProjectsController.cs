@@ -58,7 +58,7 @@ namespace ProjectManagement.Controllers.Api
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProject(int id, UpdateProjectDto projectDto)
         {
-            // Parse and validate status
+
             if (!Enum.TryParse<ProjectStatus>(projectDto.Status, out var status))
             {
                 return BadRequest($"Invalid status value: {projectDto.Status}");
@@ -104,7 +104,7 @@ namespace ProjectManagement.Controllers.Api
 
         private static ProjectResponseDto MapToResponseDto(Project project)
         {
-            // Calculate task statistics
+
             var totalTasks = 0;
             var completedTasks = 0;
             

@@ -292,15 +292,14 @@
             return project.projectTeams.map(pt => `
                 <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
                     <div>
-                        <h6 class="mb-1">${pt.team?.name || 'Unknown Team'}</h6>
-                        <p class="text-muted mb-1">${pt.team?.description || 'No description'}</p>
+                        <h6 class="mb-1">${pt.teamName || 'Unknown Team'}</h6>
                         <small class="text-muted">
-                            <i class="fas fa-users"></i> ${pt.team?.teamMembers?.length || 0} members
+                            <i class="fas fa-users"></i> ${pt.memberCount} members
                             | <i class="fas fa-calendar"></i> Assigned: ${formatDate(pt.assignedAt)}
                         </small>
                     </div>
                     <div>
-                        <a href="/Teams/Details/${pt.team?.id}" class="btn btn-sm btn-outline-primary me-2">
+                        <a href="/Teams/Details/${pt.teamId}" class="btn btn-sm btn-outline-primary me-2">
                             <i class="fas fa-eye"></i> View
                         </a>
                         <button class="btn btn-sm btn-outline-danger" onclick="removeTeamAssignment(${pt.teamId})">

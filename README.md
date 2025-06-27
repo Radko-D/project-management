@@ -113,6 +113,19 @@ The API provides the following endpoints:
 - GET /api/timelines/project/{projectId} - Get timelines by project
 - POST /api/timelines/{timelineId}/events - Add timeline event
 
+### Database Setup
+The application uses Code First approach with Entity Framework Core. The database will be automatically created when you first run the application.
+
+Default connection string uses LocalDB:
+```
+Server=(localdb)\\mssqllocaldb;Database=ProjectManagementDB;Trusted_Connection=true;MultipleActiveResultSets=true
+```
+
+For SQL Server Express, update to:
+```
+Server=.\\SQLEXPRESS;Database=ProjectManagementDB;Trusted_Connection=true;MultipleActiveResultSets=true
+```
+
 ### Swagger Documentation
 When running in development mode, visit `https://localhost:5001/swagger` to explore the API documentation and test endpoints.
 

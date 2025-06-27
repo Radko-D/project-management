@@ -7,14 +7,9 @@ namespace ProjectManagement.Controllers.Api
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TagsController : ControllerBase
+    public class TagsController(ProjectManagementContext context) : ControllerBase
     {
-        private readonly ProjectManagementContext _context;
-
-        public TagsController(ProjectManagementContext context)
-        {
-            _context = context;
-        }
+        private readonly ProjectManagementContext _context = context;
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Tag>>> GetTags()

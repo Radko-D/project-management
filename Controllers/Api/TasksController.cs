@@ -40,20 +40,17 @@ namespace ProjectManagement.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<TaskResponseDto>> CreateTask(CreateTaskDto taskDto)
         {
-            // Validate board exists
             var board = await _boardService.GetBoardByIdAsync(taskDto.BoardId);
             if (board == null)
             {
                 return BadRequest("Board not found");
             }
 
-            // Parse and validate priority
             if (!Enum.TryParse<TaskPriority>(taskDto.Priority, out var priority))
             {
                 return BadRequest($"Invalid priority value: {taskDto.Priority}");
             }
 
-            // Parse due date
             DateTime? dueDate = null;
             if (!string.IsNullOrEmpty(taskDto.DueDate))
             {
@@ -69,7 +66,6 @@ namespace ProjectManagement.Controllers.Api
                 Title = taskDto.Title,
                 Description = taskDto.Description,
                 Priority = priority,
-                Status = TaskStatus.ToDo, // Default status
                 DueDate = dueDate,
                 EstimatedHours = taskDto.EstimatedHours,
                 BoardId = taskDto.BoardId,
@@ -87,19 +83,16 @@ namespace ProjectManagement.Controllers.Api
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, UpdateTaskDto taskDto)
         {
-            // Parse and validate priority
             if (!Enum.TryParse<TaskPriority>(taskDto.Priority, out var priority))
             {
                 return BadRequest($"Invalid priority value: {taskDto.Priority}");
             }
 
-            // Parse and validate status
             if (!Enum.TryParse<TaskStatus>(taskDto.Status, out var status))
             {
                 return BadRequest($"Invalid status value: {taskDto.Status}");
             }
 
-            // Parse due date
             DateTime? dueDate = null;
             if (!string.IsNullOrEmpty(taskDto.DueDate))
             {

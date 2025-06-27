@@ -39,14 +39,12 @@ namespace ProjectManagement.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<MilestoneResponseDto>> CreateMilestone(CreateMilestoneDto milestoneDto)
         {
-            // Validate project exists
             var project = await _projectService.GetProjectByIdAsync(milestoneDto.ProjectId);
             if (project == null)
             {
                 return BadRequest("Project not found");
             }
 
-            // Parse due date
             if (!DateTime.TryParse(milestoneDto.DueDate, out var dueDate))
             {
                 return BadRequest("Invalid due date format");
@@ -71,7 +69,6 @@ namespace ProjectManagement.Controllers.Api
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateMilestone(int id, UpdateMilestoneDto milestoneDto)
         {
-            // Parse due date
             if (!DateTime.TryParse(milestoneDto.DueDate, out var dueDate))
             {
                 return BadRequest("Invalid due date format");

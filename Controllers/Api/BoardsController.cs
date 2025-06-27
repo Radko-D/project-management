@@ -81,7 +81,7 @@ namespace ProjectManagement.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<BoardResponseDto>> CreateBoard(CreateBoardDto boardDto)
         {
-            // Validate that the project exists
+            
             var project = await _projectService.GetProjectByIdAsync(boardDto.ProjectId);
             if (project == null)
             {
@@ -98,7 +98,7 @@ namespace ProjectManagement.Controllers.Api
 
             var createdBoard = await _boardService.CreateBoardAsync(board);
             
-            // Return the created board with project information
+            
             var responseDto = new BoardResponseDto
             {
                 Id = createdBoard.Id,
@@ -129,7 +129,7 @@ namespace ProjectManagement.Controllers.Api
                 Id = id,
                 Name = boardDto.Name,
                 Description = boardDto.Description,
-                ProjectId = existingBoard.ProjectId, // Keep the existing project
+                ProjectId = existingBoard.ProjectId, 
                 CreatedAt = existingBoard.CreatedAt
             };
 

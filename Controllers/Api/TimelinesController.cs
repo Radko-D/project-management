@@ -39,14 +39,14 @@ namespace ProjectManagement.Controllers.Api
         [HttpPost]
         public async Task<ActionResult<TimelineResponseDto>> CreateTimeline(CreateTimelineDto timelineDto)
         {
-            // Validate project exists
+
             var project = await _projectService.GetProjectByIdAsync(timelineDto.ProjectId);
             if (project == null)
             {
                 return BadRequest("Project not found");
             }
 
-            // Parse and validate dates
+
             if (!DateTime.TryParse(timelineDto.StartDate, out var startDate))
             {
                 return BadRequest("Invalid start date format");
@@ -81,7 +81,7 @@ namespace ProjectManagement.Controllers.Api
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTimeline(int id, UpdateTimelineDto timelineDto)
         {
-            // Parse and validate dates
+
             if (!DateTime.TryParse(timelineDto.StartDate, out var startDate))
             {
                 return BadRequest("Invalid start date format");
@@ -131,20 +131,20 @@ namespace ProjectManagement.Controllers.Api
         [HttpPost("{timelineId}/events")]
         public async Task<ActionResult<TimelineEventDto>> AddTimelineEvent(int timelineId, CreateTimelineEventDto eventDto)
         {
-            // Validate timeline exists
+
             var timeline = await _timelineService.GetTimelineByIdAsync(timelineId);
             if (timeline == null)
             {
                 return BadRequest("Timeline not found");
             }
 
-            // Parse event date
+
             if (!DateTime.TryParse(eventDto.EventDate, out var eventDate))
             {
                 return BadRequest("Invalid event date format");
             }
 
-            // Validate event date is within timeline bounds
+
             if (eventDate < timeline.StartDate || eventDate > timeline.EndDate)
             {
                 return BadRequest("Event date must be within timeline start and end dates");
